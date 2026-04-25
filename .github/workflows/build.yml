@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches: [master, main]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RelativeMouse-Windows
+          path: |
+            bin/Release/*.exe
+            bin/*.exe
+
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package
+        run: |
+          mkdir package
+          copy bin\Release\RelativeMove.exe package\ || copy bin\RelativeMove.exe package\
+          copy bin\Release\MouseLoop.exe package\ || copy bin\MouseLoop.exe package\
+          copy readme.md package\
+          copy readme-en.md package\
+          copy changelog.md package\
+
+      - name: Create ZIP
+        run: Compress-Archive -Path package\* -DestinationPath RelativeMouse-Windows.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RelativeMouse-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

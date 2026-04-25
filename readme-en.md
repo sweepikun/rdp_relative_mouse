@@ -15,6 +15,21 @@ This project uses two hooks to input relative displacement in the remote desktop
 
   + Run `MouseLoop.exe` on the local computer. After running, when the mouse moves to the screen boundary, it will come out from the other side.
   + `RelativeMove.exe` runs on a remote host **with administrator privileges**. After running, you can control games like Genshin Impact. After connecting to a remote host using different clients, this program should be restarted to ensure that the obtained screen resolution is correct.
++ Minecraft Usage
+
+  Minecraft Java Edition enables **Raw Input** by default, which reads hardware-level input directly. Mouse events simulated by this project via `SendInput` are not recognized by Raw Input, so **this tool does not work with Minecraft Java Edition by default**.
+
+  **Solution**: Go to **Options → Controls → Mouse Settings** in Minecraft, and turn off **"Raw Input"**. After disabling it, Minecraft will calculate camera movement using traditional mouse position deltas, and this tool will work correctly.
+
+  For Minecraft Bedrock Edition (Windows 10 Edition), it usually works without additional configuration.
++ Debug Mode
+
+  Both programs support the `--debug` (or `-d`) command-line argument to enable debug mode, which opens a console window showing runtime logs:
+
+  ```powershell
+  .\RelativeMove.exe --debug
+  .\MouseLoop.exe --debug
+  ```
 + Some implementation details
 
   + The program uses `MSLLHOOKSTRUCT` and `GetCursorPos/SetCursorPos`, which use different scales of mouse coordinates (screen resolution) and are obtained through `GetDeviceCaps` and `GetSystemMetrics`, respectively. The former is the physical resolution of the display, while the latter is the resolution perceived by the application. The difference between the two is the system's scaling factor.
